@@ -1,31 +1,50 @@
-def match_packages(imports: set[str], installed: dict[str, str]) -> dict[str, str]:
-    """
-    imports   — имена модулей из кода
-    installed — пакеты из venv (name -> version)
-    """
-    result = {}
+from pathlib import Path
 
-    for imp in imports:
-        for package, version in installed.items():
-            if matches(imp, package):
-                result[package] = version
-
-    return result
-
-def matches(imp: str, package: str) -> bool:
-    imp_n = normalize(imp)
-    pkg_n = normalize(package)
-
-    if imp_n == pkg_n:
-        return True
-
-    if imp_n == pkg_n.replace("-", "_"):
-        return True
-
-    if imp_n.replace("_", "-") == pkg_n:
-        return True
-
-    return False
 
 def normalize(name: str) -> str:
     return name.lower().replace("-", "_")
+
+
+def matches(import_name: str, package_name: str) -> bool:
+    imp = normalize(import_name)
+    pkg = normalize(package_name)
+
+    return (
+        imp == pkg
+        or imp == pkg.replace("-", "_")
+        or imp.replace("_", "-") == pkg
+    )
+
+
+def match_packages(
+    imports: dict[str, set[Path]],
+    installed: dict[str, str],
+) -> dict[str, dict]:
+    """
+    Возвращает:
+    {
+        "aiohttp": {
+            "version": "3.13.2",
+            "imports": {"aiohttp"},
+            "files": {Path(...)},
+        }
+    }
+    """
+
+    result: dict[str, dict] = {}
+
+    for import_name, files in imports.items():
+        for pkg_name, version in installed.items():
+            if not matches(import_name, pkg_name):
+                continue
+
+            entry = result.setdefault(pkg_name, {
+                "version": version,
+                "imports": set(),
+                "files": set(),
+            })
+
+            entry["imports"].add(import_name)
+            entry["files"].update(files)
+
+    return result
