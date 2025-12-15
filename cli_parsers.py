@@ -52,13 +52,57 @@ def cov_tests_parser(action_parser):
     )
 
 def git_init_parser(parser):
-    parser.add_argument("--remote", help="URL репозитория")
-    parser.add_argument("--ssh", action="store_true", help="Использовать SSH")
-    parser.add_argument("-y", "--yes", action="store_true", help="Без подтверждений")
+    parser.add_argument("--remote", help="URL git-репозитория")
+    parser.add_argument("--no-push", action="store_true")
+    parser.add_argument("--rollback", action="store_true")
+    parser.add_argument("-y", "--yes", action="store_true")
 
 def git_rollback_parser(parser):
     parser.add_argument(
         "-y", "--yes",
         action="store_true",
         help="Без подтверждений"
+    )
+
+def req_generate_parser(parser):
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Показать requirements.txt без записи"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Перезаписать requirements.txt"
+    )
+
+def reg_freeze_parser(parser):
+    parser.add_argument(
+        "-y", "--yes",
+        action="store_true",
+        help="Не спрашивать подтверждения"
+    )
+
+def git_info_parser(parser):
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Показать подробную информацию"
+    )
+    parser.add_argument(
+        "--short",
+        action="store_true",
+        help="Краткий вывод (для скриптов)"
+    )
+
+def req_doctor_parser(parser):
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Вывести результат в JSON"
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Показать подробности"
     )

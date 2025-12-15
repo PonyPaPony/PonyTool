@@ -2,6 +2,9 @@ from ponytool.utils.shell import run, check
 from ponytool.utils.fs import is_git_repo
 from ponytool.utils.ui import info, success, warn, error
 from ponytool.utils.io import ask_input, ask_confirm
+from pathlib import Path
+import shutil
+import re
 
 
 def ensure_git_available():
@@ -90,15 +93,35 @@ def initial_push():
     success("Репозиторий успешно опубликован 🚀")
 
 def is_valid_remote(remote: str) -> bool:
-    return (
-        remote.startswith("http://")
-        or remote.startswith("https://")
-        or remote.startswith("git@")
-    )
+    return bool(re.match(
+        r"^(https://|http://|git@)[\w\.-]+[:/][\w\.-]+/[\w\.-]+(\.git)?$",
+        remote
+    ))
+
+def rollback_repo():
+    git_dir = Path(".git")
+
+    if not git_dir.exists():
+        warn("Откат невозможен — .git не найден")
+        return
+
+    info("Будет удалён git-репозиторий (.git)")
+    warn("Файлы проекта затронуты не будут")
+
+    if not ask_confirm("Продолжить откат?"):
+        warn("Откат отменён")
+        return
+
+    shutil.rmtree(git_dir)
+    success("Git-репозиторий успешно удалён")
 
 
 def git_init(args):
     if not ensure_git_available():
+        return
+
+    if args.rollback:
+        rollback_repo()
         return
 
     if is_git_repo() and get_remote():
@@ -113,9 +136,12 @@ def git_init(args):
 
     committed = initial_commit(args)
 
+    if args.no_push:
+        warn("Push пропущен (--no-push)")
+        return
+
     if committed or args.yes:
         initial_push()
     else:
         warn("Push пропущен (нет коммита)")
         info("Добавьте файлы и выполните: pony git push")
-
