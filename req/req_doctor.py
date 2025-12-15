@@ -22,8 +22,8 @@ def _print_human(r: dict, verbose: bool):
         error("Doctor: обнаружены проблемы")
 
     # базовые пункты
-    _line_ok(r["python"], "Python", str(r["python"]) if r["python"] else "—", verbose)
-    _line_ok(r["venv"], "Venv", str(r["venv"]) if r["venv"] else "—", verbose)
+    _line_ok(r["python_ok"], "Python", str(r["python"]), verbose)
+    _line_ok(r["venv_ok"], "Venv", str(r["venv"]), verbose)
 
     if verbose:
         info(f"Site-packages: {len(r['site_packages'])}")

@@ -51,12 +51,23 @@ def run_doctor():
 def _result(ok, python, venv, site_packages, installed, imports, matched, problems, hints):
     return {
         "ok": ok,
+
         "python": python,
+        "python_ok": python is not None,
+
         "venv": venv,
+        "venv_ok": venv is not None,
+
         "site_packages": site_packages,
+
         "installed_packages": installed,
         "imports": imports,
         "matched": matched,
+
+        "unmatched_imports": [],
+        "unused_packages": [],
+
         "problems": problems,
         "hints": hints,
     }
+
