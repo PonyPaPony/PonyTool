@@ -6,7 +6,14 @@ from ponytool.utils.io import ask_confirm
 from ponytool.utils.config import load_config
 
 config = load_config()
-TRASH = config['project']['clean']['trash']
+TRASH = (
+    config
+    .get("project", {})
+    .get("clean", {})
+    .get("trash", [])
+)
+if not TRASH:
+    warn("Список очистки пуст — проверь конфигурацию")
 
 def project_clean(args):
     root = Path.cwd()

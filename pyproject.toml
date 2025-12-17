@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ponytool"
+version = "1.0.3"
+description = "Developer toolbox (CLI)"
+requires-python = ">=3.10"
+
+[project.scripts]
+pony = "ponytool.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ponytool*"]
+
+[tool.setuptools.package-data]
+ponytool = ["config/*.toml"]
