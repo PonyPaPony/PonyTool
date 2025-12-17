@@ -1,8 +1,11 @@
 from pathlib import Path
 
 
-def normalize(name: str) -> str:
+def normalize(name) -> str:
+    if not isinstance(name, str):
+        return ""
     return name.lower().replace("-", "_")
+
 
 
 def matches(import_name: str, package_name: str) -> bool:
@@ -48,3 +51,23 @@ def match_packages(
             entry["files"].update(files)
 
     return result
+
+def find_unmatched_imports(
+    imports: set[str],
+    matched_packages: dict[str, str],
+) -> set[str]:
+    matched_imports = set()
+
+    for pkg in matched_packages:
+        matched_imports.add(normalize(pkg))
+
+    return {
+        imp for imp in imports
+        if normalize(imp) not in matched_imports
+    }
+
+def find_unused_packages(
+    installed: dict[str, str],
+    matched_packages: dict[str, str],
+) -> set[str]:
+    return set(installed) - set(matched_packages)

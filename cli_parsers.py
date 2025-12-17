@@ -75,6 +75,11 @@ def req_generate_parser(parser):
         action="store_true",
         help="Перезаписать requirements.txt"
     )
+    parser.add_argument(
+    "--strict",
+    action="store_true",
+    help="Ошибка, если есть не сопоставленные импорты или лишние пакеты",
+    )
 
 def reg_freeze_parser(parser):
     parser.add_argument(

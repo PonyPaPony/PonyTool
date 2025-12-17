@@ -14,7 +14,7 @@ from ponytool.git.doctor import git_doctor
 from ponytool.test.run import run_tests
 from ponytool.test.coverage import run_coverage
 
-from ponytool.req.generate import req_generate, req_freeze
+from ponytool.req.generate import req_generate, req_freeze, req_clean
 from ponytool.req.req_doctor import req_doctor
 
 DISPATCH_TABLE = {
@@ -39,6 +39,7 @@ DISPATCH_TABLE = {
         'gen': req_generate,
         "freeze": req_freeze,
         "doctor": req_doctor,
+        'clean': req_clean,
     }
 }
 

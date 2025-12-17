@@ -31,6 +31,8 @@ def _print_human(r: dict, verbose: bool):
     info(f"Импортов найдено: {r['imports']}")
     info(f"Матчей: {r['matched']}")
 
+    unmatched_msg(r)
+
     # проблемы
     if r["problems"]:
         warn("\nПроблемы:")
@@ -58,3 +60,14 @@ def _jsonable(r: dict) -> dict:
     out["venv"] = str(out["venv"]) if out["venv"] else None
     out["site_packages"] = [str(p) for p in out.get("site_packages", [])]
     return out
+
+def unmatched_msg(r):
+    if r["unmatched_imports"]:
+        warn("\nИмпорты без пакетов:")
+        for i in r["unmatched_imports"]:
+            warn(f"  • {i}")
+
+    if r["unused_packages"]:
+        info("\nНеиспользуемые пакеты:")
+        for p in r["unused_packages"]:
+            info(f"  • {p}")
