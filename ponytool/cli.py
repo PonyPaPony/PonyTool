@@ -65,3 +65,5 @@ def run_interactive_menu():
 
 if __name__ == '__main__':
     main()
+
+msg = 'test_msg'
