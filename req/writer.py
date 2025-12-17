@@ -54,7 +54,7 @@ def write_requirements(
 
 
 def write(
-    packages: dict[str, str],
+    packages: dict[str, dict],
     path: Path,
     dry_run: bool,
     force: bool,
