@@ -20,6 +20,7 @@ parts/
 sdist/
 var/
 wheels/
+.pony/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -172,3 +173,18 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 """
+
+PROJECT_STRUCTURE = [
+    "src",
+    "tests",
+    "docs",
+]
+
+FOLDER_STRUCTURE = (
+    "Введите структуру папок\n"
+    "Примеры:\n"
+    "  src,tests,docs\n"
+    "  src/api/v1\n"
+    "  src,docs/api/v1\n"
+    "Нажмите Enter для структуры по умолчанию: "
+)

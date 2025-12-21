@@ -1,9 +1,8 @@
-from ponytool.utils.shell import run, check
-from ponytool.utils.fs import is_git_repo
-from ponytool.utils.ui import success, warn, error
+from ponytool.utils.shell import check, run_output
+from ponytool.utils.fs import has_git_repo
+from ponytool.utils.ui import success, warning, error
 
-CHECKS = []
-
+CHECKS = []  # накапливаем найденные проблемы для финального отчёта
 
 def git_doctor(args=None):
     CHECKS.clear()
@@ -13,74 +12,74 @@ def git_doctor(args=None):
     if not check_repo():
         return
 
-    check_remote()
-    check_upstream()
-    check_dirty()
-    check_branch()
-
-    print_summary()
-
+    check_all(CHECKS)
+    print_result()
 
 def check_git() -> bool:
-    if check(["git", "--version"]):
+    if check(['git', '--version']):
         success("Git установлен")
         return True
     error("Git не установлен")
     return False
 
-
 def check_repo() -> bool:
-    if is_git_repo():
+    if has_git_repo():
         success("Git-репозиторий найден")
         return True
     error("Текущая директория не является git-репозиторием")
     return False
 
-
 def check_remote():
-    remotes = run(["git", "remote"], capture=True).strip()
+    remotes = run_output(['git', 'remote'], check=False).strip()
     if remotes:
         success("Remote origin настроен")
     else:
-        warn("Remote не настроен")
-        CHECKS.append("remote")
+        warning("Remote не настроен")
 
+    return 'remote'
 
 def check_upstream():
-    upstream = run(
+    upstream = run_output(
         ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
-        capture=True,
         check=False
     ).strip()
 
     if upstream:
         success(f"Upstream: {upstream}")
     else:
-        warn("Upstream не найден")
-        CHECKS.append("upstream")
+        warning("Upstream не найден")
 
+    return 'upstream'
 
 def check_dirty():
-    dirty = run(["git", "status", "--porcelain"], capture=True).strip()
+    dirty = run_output(["git", "status", "--porcelain"], check=False).strip()
     if dirty:
-        warn("Есть незакоммиченные изменения")
-        CHECKS.append("dirty")
-    else:
-        success("Рабочая директория чистая")
+        warning("Есть незакоммиченные изменения")
+        return 'dirty'
 
+    success("Рабочая директория чистая")
+    return None
 
 def check_branch():
-    branch = run(
+    branch = run_output(
         ["git", "branch", "--show-current"],
-        capture=True
+        check=False
     ).strip()
 
     if branch == "main":
         success("Ветка: main")
     else:
-        warn(f"Текущая ветка: {branch}")
-        CHECKS.append("branch")
+        warning(f"Текущая ветка: {branch}")
 
+    return 'branch'
+
+def check_all(checks):
+    checks.append(check_remote())
+    checks.append(check_upstream())
+    checks.append(check_dirty())
+    checks.append(check_branch())
+
+# ключи возвращаются check_* функциями и используются для рекомендаций
 RECOMMENDATIONS = {
     "remote": "Добавьте remote: pony git init",
     "upstream": "Настройте upstream: git push -u origin main",
@@ -88,13 +87,12 @@ RECOMMENDATIONS = {
     "branch": "Рекомендуется использовать ветку main",
 }
 
-
-def print_summary():
+def print_result():
     print()
     if not CHECKS:
         success("Git-конфигурация в порядке 🎉")
         return
 
-    warn("Обнаружены проблемы:")
+    warning("Обнаружены проблемы:")
     for key in CHECKS:
-        print(f"  • {RECOMMENDATIONS[key]}")
+        print(f"  - {RECOMMENDATIONS[key]}")

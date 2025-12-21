@@ -1,25 +1,28 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
 
-from ponytool.utils.fs import is_git_repo
-from ponytool.utils.ui import warn, success, info
+from ponytool.utils.fs import has_git_repo
+from ponytool.utils.ui import warning, success, info, error
 from ponytool.utils.io import ask_confirm
 
 
 def git_rollback(args):
-    if not is_git_repo():
-        warn("Текущая директория не является git-репозиторием")
+    if not has_git_repo():
+        warning("Текущая директория не является git-репозиторием")
         return
 
-    git_dir = Path.cwd() / ".git"
+    git_dir = Path.cwd() / '.git'
 
     info("Будет удалён git-репозиторий (.git)")
-    warn("Файлы проекта затронуты не будут")
+    warning("Файлы проекта затронуты не будут")
 
     if not args.yes:
         if not ask_confirm("Продолжить откат?"):
             info("Откат отменён")
             return
 
-    shutil.rmtree(git_dir)
-    success("Git-репозиторий успешно удалён")
+    try:
+        shutil.rmtree(git_dir)
+        success("Git-репозиторий успешно удалён")
+    except FileNotFoundError:
+        error("Git-репозиторий не найден!")

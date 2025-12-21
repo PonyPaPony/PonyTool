@@ -1,67 +1,150 @@
 import argparse
+import sys
 
 from ponytool.utils.ui import error, info
-from ponytool.cli_parsers import *
-from ponytool.cli_config import *
-
+from ponytool.cli_config import PARSER_TABLE, DISPATCH_TABLE
 
 def main():
-    parser = argparse.ArgumentParser(prog="pony")
-    subparsers = parser.add_subparsers(dest="command")
+    """
+    Точка входа CLI.
+
+    Изначально тут буквально было все, теперь оптимизировано.
+    """
+    parser = argparse.ArgumentParser(
+        prog='pony',
+        description='PonyTool CLI (в процессе разработки)'
+    )
+    # argparse иногда ведёт себя странно,
+    # если не указать dest явно
+    subparsers = parser.add_subparsers(dest='command')
 
     for section, actions in DISPATCH_TABLE.items():
+        # TODO: iternal-секции тут могут быть лишними
         section_parser = subparsers.add_parser(section)
-        section_sub = section_parser.add_subparsers(dest="action")
 
-        for action in actions:
-            action_parser = section_sub.add_parser(action)
+        # Некоторые секции не имеют action
+        if not actions:
+            continue
 
-            parser_func = PARSER_TABLE.get((section, action))
-            if parser_func:
-                parser_func(action_parser)
+        section_subparsers = section_parser.add_subparsers(dest='action')
+
+        # После диеты
+        action_check(section, actions, section_subparsers)
+
 
     args = parser.parse_args()
+
+    # ВАЖНО: dispatch не кидает исключения наружу
     dispatch(args)
 
 def dispatch(args):
-    if not args.command:
+    """
+    Роутинг Команд
+
+    И что, что некрасивый за то рабочий
+    """
+    # args.command может отсутствовать при странных вызовах
+    if not hasattr(args, 'command') or args.command is None:
         run_interactive_menu()
         return
 
+    # Мама, пожалуйста, ударь, тапком, того кто придумал, что C и С должны быть похожи (да они разные)
     if args.command not in DISPATCH_TABLE:
         error(f"Неизвестная команда: {args.command}")
+        print_available_sections()
         return
 
-    if not args.action:
+    # command есть, но action нет
+    if not getattr(args, 'action', None):
         print_section_help(args.command)
         return
 
     handler = DISPATCH_TABLE[args.command].get(args.action)
 
-    if not handler:
-        print_action_help(args.command)
+    if handler is None:
+        error(f"Неизвестное действие: {args.action}")
+        print_section_help(args.command)
         return
 
-    handler(args)
+    try:
+        handler(args)
+    except KeyboardInterrupt:
+        info("\nОперация отменена пользователем")
+    except Exception as err:
+        # CLI Хэш-тэг живи, ЖИВИ
+        error("Произошла ошибка при выполнении команды")
+        error(str(err))
 
-def print_section_help(section: str):
-    info(f"\nДоступные действия для '{section}':")
-    for action in DISPATCH_TABLE[section]:
+def print_available_sections():
+    info("\nДоступные разделы:")
+    for section in DISPATCH_TABLE.keys():
+        info(f"  - {section}")
+
+
+def print_section_help(section):
+    info("")
+    info(f"Доступные действия для '{section}':")
+
+    actions = DISPATCH_TABLE.get(section)
+    if not actions:
+        info("  (действий нет)")
+        return
+
+    for action in actions:
         info(f"  - {action}")
 
-def print_action_help(section: str):
-    info(f"\nНеизвестное действие для '{section}'.")
-    print_section_help(section)
+    info("\nПример:")
+    info(f"  pony {section} <action>")
 
+
+# Сколько раз я при отладке забывал команды...
 def run_interactive_menu():
+    """
+    Интерактивный режим.
+
+    Используется как fallback,
+    когда CLI запущен без аргументов.
+    """
+
     info("\nPonyTool — интерактивный режим\n")
 
     for section, actions in DISPATCH_TABLE.items():
         info(section)
+
+        if not actions:
+            info("  (нет действий)")
+            continue
+
         for action in actions:
             info(f"  - {action}")
 
-    info("\nПример: pony git push")
+    info("\nПример использования:")
+    info("  pony git push")
 
-if __name__ == '__main__':
-    main()
+def action_check(section, actions, section_subparsers):
+    """
+    Main был слишком перегружен,
+    всучил ему диету
+    """
+    for action in actions:
+        action_parser = section_subparsers.add_parser(action)
+
+        parser_func = PARSER_TABLE.get((section, action))
+        if parser_func is None:
+            # Христа ради заклинаю не падай
+            continue
+
+        try:
+            parser_func(action_parser)
+        except Exception as e:
+            # Парсеры порой ломают CLI
+            error(f"Ошибка инициализации парсера {section}:{action}")
+            error(str(e))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        info("\nВыход")
+        sys.exit(130)

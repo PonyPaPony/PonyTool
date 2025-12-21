@@ -5,58 +5,64 @@ from ponytool.req.scan.collector import collect_installed_packages
 
 
 def scan():
+    # Пошаговый pipeline: каждая стадия валидирует окружение
+    # и возвращает ctx со статусом выполнения
+    ctx = check_venv()
+    if ctx["status"] != "ok":
+        return ctx
+
+    ctx = check_python(ctx)
+    if ctx["status"] != "ok":
+        return ctx
+
+    ctx = check_site_packages(ctx)
+    if ctx["status"] != "ok":
+        return ctx
+
+    ctx["packages"] = collect_installed_packages(ctx["site_packages"])
+    return ctx
+
+def check_venv():
     venv = find_venv()
-    error = check_venv(venv)
-    if error:
-        return error
-
-    py = get_python()
-    python = py['python']
-    venv = py['venv']
-    error = check_python(python, venv)
-    if error:
-        return error
-
-    site_packages = get_site_packages(python)
-    error = check_site_packages(site_packages, python, venv)
-    if error:
-        return error
-
-    packages = collect_installed_packages(site_packages)
-
-    return {
-        "status": "ok",
-        "python": python,
-        "venv": venv,
-        "packages": packages,
-    }
-
-def check_venv(venv):
     if not venv:
         return {
             "status": "no-venv",
             "python": None,
             "venv": None,
+            "site_packages": [],
             "packages": {},
         }
-    return None
 
-def check_python(python, venv):
+    return {
+        "status": "ok",
+        "python": None,
+        "venv": venv,
+        "site_packages": [],
+        "packages": {},
+    }
+
+
+def check_python(ctx: dict):
+    # Отсутствие venv — не ошибка, а валидный сценарий
+    py = get_python()
+    python = py["python"]
+
     if not python:
-        return {
-            "status": "error",
-            "python": None,
-            "venv": venv,
-            "packages": {},
-        }
-    return None
+        ctx["status"] = "error"
+        return ctx
 
-def check_site_packages(site_packages, python, venv):
+    # python и venv могут отличаться от найденного ранее окружения
+    ctx["python"] = python
+    ctx["venv"] = py["venv"]
+    return ctx
+
+
+def check_site_packages(ctx: dict):
+    # site-packages нужны для дальнейшего сбора зависимостей
+    site_packages = get_site_packages(ctx["python"])
     if not site_packages:
-        return {
-            "status": "error",
-            "python": python,
-            "venv": venv,
-            "packages": {},
-        }
-    return None
+        ctx["status"] = "error"
+        return ctx
+
+    ctx["site_packages"] = site_packages
+    return ctx

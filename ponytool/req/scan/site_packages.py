@@ -1,11 +1,11 @@
-from pathlib import Path
 import subprocess
 import json
+from pathlib import Path
 
 
 def get_site_packages(python: Path) -> list[Path]:
     cmd = [
-        str(python),
+        str(python),  # Оборачиваем в строку, чтобы subprocess не ругался
         "-c",
         "import site, json; print(json.dumps(site.getsitepackages()))"
     ]
@@ -14,7 +14,7 @@ def get_site_packages(python: Path) -> list[Path]:
         cmd,
         capture_output=True,
         text=True,
-        check=True
+        check=True,
     )
 
     paths = json.loads(result.stdout.strip())

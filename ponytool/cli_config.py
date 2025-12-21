@@ -1,58 +1,77 @@
-from ponytool.cli_parsers import *
-
+# project
 from ponytool.project.init import project_init
-from ponytool.project.clean import project_clean
+from ponytool.project.clear import project_clean
+from ponytool.project.status_writer import get_project_status
+from ponytool.cli_parsers import project_init_parser, project_clear_parser, project_status_parser
 
-from ponytool.git.push import git_push
-from ponytool.git.status import git_status
-from ponytool.git.remove import git_remove
-from ponytool.git.init import git_init
-from ponytool.git.info import git_info
-from ponytool.git.rollback import git_rollback
+# git
 from ponytool.git.doctor import git_doctor
+from ponytool.git.info import git_info
+from ponytool.git.init import git_init
+from ponytool.git.push import push_to_git
+from ponytool.git.remove import remove_git_data
+from ponytool.git.rollback import git_rollback
+from ponytool.cli_parsers import (
+    git_info_parser,
+    git_init_parser,
+    git_push_parser,
+    git_rollback_parser,
+)
 
+# test
 from ponytool.test.run import run_tests
-from ponytool.test.coverage import run_coverage
+from ponytool.test.coverage import run_coverage_test
+from ponytool.test.test_doctor_writer import doctor_for_tests
+from ponytool.cli_parsers import run_py_test_parser, cov_py_test_parser, doc_py_test_parser
 
-from ponytool.req.generate import req_generate, req_freeze, req_clean
-from ponytool.req.req_doctor import req_doctor
+# requirements
+from ponytool.req.generate import (freeze_requirements, generate_requirements, clean_requirements)
+from ponytool.cli_parsers import (req_gen_parser, req_freeze_parser, req_clean_parser, req_doctor_parser)
+from ponytool.req.req_doctor import doctor_for_requirements
 
+
+# DISPATCH_TABLE: (section -> action -> handler)
 DISPATCH_TABLE = {
-    "project": {
+    'project': {
         "init": project_init,
-        "clean": project_clean,
+        "status": get_project_status,
+        'clear': project_clean,
     },
-    "git": {
-        'init': git_init,
-        'info': git_info,
-        "push": git_push,
-        "status": git_status,
-        "remove": git_remove,
-        "rollback": git_rollback,
-        "doctor": git_doctor,
+    'git': {
+        "init": git_init,
+        "info": git_info,
+        'doctor': git_doctor,
+        'push': push_to_git,
+        'remove': remove_git_data,
+        'rollback': git_rollback,
     },
-    "test": {
+    'test': {
         "run": run_tests,
-        "coverage": run_coverage,
+        "cov": run_coverage_test,
+        "doctor": doctor_for_tests,
     },
-    "req": {
-        'gen': req_generate,
-        "freeze": req_freeze,
-        "doctor": req_doctor,
-        'clean': req_clean,
-    }
+    'req': {
+        "gen": generate_requirements,
+        "freeze": freeze_requirements,
+        "doctor": doctor_for_requirements,
+        "clean": clean_requirements,
+    },
 }
 
+# PARSER_TABLE: (section, action) -> argparse setup
 PARSER_TABLE = {
-    ("git", "push"): git_parser,
+    ("project", 'init'): project_init_parser,
+    ("project", 'clear'): project_clear_parser,
+    ("project", 'status'): project_status_parser,
     ("git", 'init'): git_init_parser,
-    ('git', 'info'): git_info_parser,
-    ("git", 'rollback'): git_rollback_parser,
-    ("project", "init"): project_parser,
-    ("project", "clean"): project_clean_parser,
-    ("test", 'run'): run_tests_parser,
-    ("test", 'coverage'): cov_tests_parser,
-    ("req", 'gen'): req_generate_parser,
-    ('req', 'freeze'): reg_freeze_parser,
+    ("git", 'info'): git_info_parser,
+    ('git', 'push'): git_push_parser,
+    ('git', 'rollback'): git_rollback_parser,
+    ("test", 'run'): run_py_test_parser,
+    ("test", 'cov'): cov_py_test_parser,
+    ("test", 'doctor'): doc_py_test_parser,
+    ('req', 'gen'): req_gen_parser,
+    ('req', 'freeze'): req_freeze_parser,
+    ('req', 'clean'): req_clean_parser,
     ('req', 'doctor'): req_doctor_parser,
 }

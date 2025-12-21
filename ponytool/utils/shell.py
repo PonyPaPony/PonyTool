@@ -1,32 +1,18 @@
 import subprocess
 
-
-def run(cmd, capture=False, check=True):
-    """
-    Универсальный shell runner
-    """
-    if capture:
-        return subprocess.check_output(
-            cmd,
-            text=True,
-            stderr=subprocess.STDOUT
-        )
-
+def run(cmd, check=True) -> None:
     subprocess.run(cmd, check=check)
-    return None
 
+def run_output(cmd, check=True) -> str:
+    return subprocess.check_output(
+        cmd,
+        text=True,
+        stderr=subprocess.STDOUT,
+    ).strip()
 
-def check(cmd):
-    """
-    Проверка доступности команды
-    """
+def check(cmd) -> bool:
     try:
-        subprocess.run(
-            cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=True
-        )
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
-    except Exception:
+    except subprocess.CalledProcessError:
         return False

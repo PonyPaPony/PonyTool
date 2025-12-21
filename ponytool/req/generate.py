@@ -3,11 +3,11 @@ import sys
 from pathlib import Path
 
 from ponytool.utils.shell import run
-from ponytool.utils.ui import info, success, warn, error
+from ponytool.utils.ui import (info, success, warning, error)
 from ponytool.req.scanner import scan
 from ponytool.req.imports import collect_imports
-from ponytool.req.packages import match_packages
 from ponytool.req.writer import write
+from ponytool.req.analyzer import analyze
 
 IGNORED_PACKAGES = {
     "pip",
@@ -15,87 +15,74 @@ IGNORED_PACKAGES = {
     "wheel"
 }
 
+REQ_PATH = Path("requirements.txt")
 
-def req_freeze(args):
+
+def freeze_requirements(args):
     info("Генерация requirements.txt")
 
-    python = sys.executable
+    py = sys.executable
 
-    # получаем список пакетов
     result = run(
-        [python, "-m", "pip", "list", "--format=json"],
+        [py, '-m', 'pip', 'list', '--format=json'],
         capture=True
     )
 
-    packages = json.loads(result)
+    pkg = json.loads(result)
 
-    packages = {
-        pkg["name"].lower(): pkg["version"]
-        for pkg in packages
-        if pkg["name"].lower() not in IGNORED_PACKAGES
+    pkg = {
+        item["name"].lower(): {
+            "version": item["version"],
+            "imports": set(),
+            "files": set(),
+        }
+        for item in pkg
+        if item["name"].lower() not in IGNORED_PACKAGES
     }
 
     write(
-        packages=packages,
-        path=Path("requirements.txt"),
+        packages=pkg,
+        path=REQ_PATH,
         dry_run=args.dry_run,
         force=args.yes,
     )
 
-def req_generate(args):
+def generate_requirements(args):
     info("Анализ проекта и генерация requirements.txt")
 
     info("Сканирование окружения…")
-    scan_result = get_scan_result()
-    if not scan_result:
+    scan_results = get_scan_result()
+    if not scan_results:
         return
+
     info("Поиск импортов в проекте…")
-    imports = get_imports()
+    imp = get_imports()
     info("Сопоставление пакетов…")
-    packages = get_packages(imports, scan_result["packages"])
 
-    unmatched = scan_result.get("unmatched_imports", [])
-    unused = scan_result.get("unused_packages", [])
+    analysis = analyze(
+        imports=imp,
+        installed=scan_results["packages"]
+    )
 
-    if args.strict and (unmatched or unused):
-        get_unused_unmatched(unmatched, unused)
+    pkg = analysis["matched"]
+    unmatched = analysis["unmatched_imports"]
+    unused = analysis["unused_packages"]
+
+    if args.strict and (unused or unmatched):
+        report_unused_unmatched(unused, unmatched)
+        return
 
     write(
-        packages=packages,
-        path=Path("requirements.txt"),
+        packages=pkg,
+        path=REQ_PATH,
         dry_run=args.dry_run,
         force=args.force,
     )
 
-def req_clean(args):
-    scan_result = scan()
-    unused = scan_result.get("unused_packages", [])
-
-    if not unused:
-        success("Неиспользуемых пакетов нет")
-        return
-
-    warn("Будут удалены пакеты:")
-    for p in unused:
-        warn(f"  • {p}")
-
-    if not args.yes:
-        from ponytool.utils.io import ask_confirm
-        if not ask_confirm("Продолжить?"):
-            warn("Отменено")
-            return
-
-    python = sys.executable
-    for pkg in unused:
-        run([python, "-m", "pip", "uninstall", "-y", pkg])
-
-    success("Очистка завершена")
-
-
 def get_scan_result():
     result = scan()
-    status = result["status"]
-    if status != "ok":
+    status = result['status']
+    if status != 'ok':
         if status == 'no-venv':
             error("Виртуальное окружение не найдено. Создайте venv.")
         else:
@@ -106,27 +93,83 @@ def get_scan_result():
 def get_imports():
     imports = collect_imports(Path.cwd())
     if not imports:
-        warn("В проекте нет Python-импортов")
-        return {}
+        warning("В проекте нет Python-импортов")
+        return {}  # Если возвращать None, может падать с ошибкой
     return imports
 
-def get_packages(imports, installed_packages):
-    packages = match_packages(imports, installed_packages)
-    if not packages:
-        warn("Зависимости не найдены")
-    else:
-        success(f"Найдено зависимостей: {len(packages)}")
-    return packages
+def report_unused_unmatched(unused, unmatched):
+    error("Strict mode: обнаружены проблемы")
+    if unmatched:
+        warning("Импорты без пакетов:")
+        for i in unmatched:
+            warning(f"  - {i}")
+    if unused:
+        warning("Неиспользуемые пакеты:")
+        for p in unused:
+            warning(f"  - {p}")
 
-def get_unused_unmatched(unused, unmatched):
-        error("Strict mode: обнаружены проблемы")
-        if unmatched:
-            warn("Импорты без пакетов:")
-            for i in unmatched:
-                warn(f"  • {i}")
-        if unused:
-            warn("Неиспользуемые пакеты:")
-            for p in unused:
-                warn(f"  • {p}")
+def clean_requirements(args):
+    scan_result = get_scan_result()
+    if not scan_result:
+        return
 
-        return unused, unmatched
+    imports = get_imports()
+    analysis = analyze(imports, scan_result["packages"])
+    unused = analysis["unused_packages"]
+
+    if not unused:
+        success("Неиспользуемых пакетов нет")
+        return
+
+    warning("Эта команда удалит все неиспользуемые пакеты из текущего venv")
+    warning("Включая pytest, pip-tools и т.д.")
+
+    mode = resolve_clean_mode(args)
+
+    if mode == "dry-run":
+        info("DRY-RUN: пакеты, которые будут удалены:")
+        for pkg in sorted(unused):
+            print(f"  - {pkg}")
+        return
+
+    if not confirm_clean(mode, unused, args.yes):
+        warning("Отменено")
+        return
+
+    py = sys.executable
+    for pkg in unused:
+        info("Удаление пакетов…")
+        run([py, '-m', 'pip', 'uninstall', '-y', pkg])
+
+    success("Очистка завершена")
+
+def resolve_clean_mode(args) -> str:
+    """
+    Возвращает режим очистки:
+    - "dry-run"
+    - "project-only"
+    - "all"
+    """
+    if args.dry_run:
+        return "dry-run"
+    if args.all:
+        return "all"
+    return "project-only"
+
+def confirm_clean(mode: str, packages: set[str], force: bool) -> bool:
+    if force:
+        return True
+
+    warning("Эта команда изменит текущее виртуальное окружение")
+
+    if mode == "all":
+        warning("Будут удалены ВСЕ неиспользуемые пакеты")
+    elif mode == "project-only":
+        warning("Будут удалены пакеты, не используемые в проекте")
+
+    warning("Пакеты к удалению:")
+    for pkg in sorted(packages):
+        warning(f"  - {pkg}")
+
+    from ponytool.utils.io import ask_confirm
+    return ask_confirm("Продолжить?")

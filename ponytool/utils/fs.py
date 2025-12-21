@@ -1,37 +1,33 @@
 import subprocess
 
-def is_git_repo() -> bool:
+
+def _run_git(cmd: list[str]) -> str:
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return ""
+
+def has_git_repo() -> bool:
     try:
         subprocess.run(
-            ["git", "rev-parse", "--is-inside-work-tree"],
+            ['git', 'rev-parse', '--is-inside-work-tree'],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             check=True,
         )
         return True
     except subprocess.CalledProcessError:
+        # git возвращает ненулевой код, если команда неприменима вне репозитория
         return False
 
-def has_remote() -> bool:
-    try:
-        result = subprocess.run(
-            ["git", "remote"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return bool(result.stdout.strip())
-    except subprocess.CalledProcessError:
-        return False
+def repo_has_remote() -> bool:
+    return bool(_run_git(['git', 'remote']))
 
-
-def has_changes() -> bool:
-    try:
-        result = subprocess.run(
-            ['git', 'status', '--porcelain'],
-            capture_output=True,
-            text=True,
-        )
-        return bool(result.stdout.strip())
-    except subprocess.CalledProcessError:
-        return False
+def working_tree_has_changes() -> bool:
+    return bool(_run_git(['git', 'status', '--porcelain']))

@@ -4,12 +4,12 @@ from pathlib import Path
 def read_metadata(dist_info: Path) -> dict:
     meta_file = dist_info / "METADATA"
     if not meta_file.exists():
-        return {}
+        return {}  # при возврате None падает с ошибкой
 
     name = None
     version = None
 
-    with meta_file.open(encoding="utf-8", errors="ignore") as f:
+    with meta_file.open(encoding="utf-8", errors='ignore') as f:
         for line in f:
             name, version = check_startswith(line, name, version)
 
@@ -24,7 +24,7 @@ def read_metadata(dist_info: Path) -> dict:
         "version": version,
     }
 
-def check_startswith(line, name, version):
+def check_startswith(line: str, name: str, version: str):
     if line.startswith("Name:"):
         name = line.split(":", 1)[1].strip()
     elif line.startswith("Version:"):
