@@ -1,6 +1,6 @@
 import json
 from ponytool.utils.ui import info, success, warning, error
-from ponytool.test.doctor_test_core import run_doctor_for_tests
+from ponytool.pytest_script.doctor_test_core import run_doctor_for_tests
 
 
 def doctor_for_tests(args):

@@ -2,7 +2,7 @@ import sys
 import subprocess
 from ponytool.utils.shell import run
 from ponytool.utils.ui import info
-from ponytool.test.report_test import save_test_report
+from ponytool.pytest_script.report_test import save_test_report
 
 
 def run_tests(args):

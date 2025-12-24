@@ -2,8 +2,8 @@ import sys
 from pathlib import Path
 
 from ponytool.req.scan.venv import find_active_venv, find_venv
-from ponytool.test.doctor_test_core import run_doctor_for_tests
-from ponytool.test.report_test import load_test_report
+from ponytool.pytest_script.doctor_test_core import run_doctor_for_tests
+from ponytool.pytest_script.report_test import load_test_report
 from ponytool.utils.fs import has_git_repo
 from ponytool.utils.shell import check
 

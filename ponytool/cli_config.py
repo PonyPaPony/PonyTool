@@ -18,10 +18,10 @@ from ponytool.cli_parsers import (
     git_rollback_parser,
 )
 
-# test
-from ponytool.test.run import run_tests
-from ponytool.test.coverage import run_coverage_test
-from ponytool.test.test_doctor_writer import doctor_for_tests
+# pytest_script
+from ponytool.pytest_script.run_tests import run_tests
+from ponytool.pytest_script.coverage import run_coverage_test
+from ponytool.pytest_script.test_doctor_writer import doctor_for_tests
 from ponytool.cli_parsers import run_py_test_parser, cov_py_test_parser, doc_py_test_parser
 
 # requirements
