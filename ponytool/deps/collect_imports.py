@@ -2,16 +2,12 @@ import ast
 import sys
 from pathlib import Path
 
+EXCLUDE_DIRS = {"venv", ".venv"}
 
-EXCLUDE_DIRS = {
-    "venv",
-    ".venv",
-    "__pycache__",
-    ".git",
-}
 STDLIB = set(sys.stdlib_module_names)
 
-def collect_imports(project_root: Path) -> dict[str, set[Path]]:
+
+def scan_imports(project_root: Path) -> dict[str, set[Path]]:
     """
     Возвращает:
     {
@@ -26,7 +22,7 @@ def collect_imports(project_root: Path) -> dict[str, set[Path]]:
         found = extract_imports_from_file(py_file)
 
         for name in found:
-            if name in STDLIB:  # Потому что os sys и json в зависимостях нет места
+            if name in STDLIB: # Потому что os sys и json в зависимостях нет места
                 continue
             imports.setdefault(name, set()).add(py_file)
 
@@ -45,12 +41,12 @@ def extract_imports_from_file(path: Path) -> set[str]:
     imports = set()
 
     try:
-        source = path.read_text(encoding='utf-8')
-    except UnicodeDecodeError:
+        src = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
         return imports
 
     try:
-        tree = ast.parse(source)
+        tree = ast.parse(src)
     except SyntaxError:
         return imports
 

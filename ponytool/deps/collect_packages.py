@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 def normalize(name: str) -> str:
     if not isinstance(name, str):
         return ""
@@ -13,10 +12,10 @@ def matches(import_name: str, package_name: str) -> bool:
     return (
         imp == pkg
         or imp == pkg.replace("-", "_")
-        or imp.replace("_", "-") == pkg
+        or imp.replace("-", "_") == pkg
     )
 
-def match_packages(
+def match_package(
         imports: dict[str, set[Path]],
         installed: dict[str, str]
 ) -> dict[str, dict[str, set | str]]:
@@ -30,8 +29,7 @@ def match_packages(
         }
     }
     """
-
-    result: dict[str, dict[str, set | str]] = {}  # Чтобы избежать ошибочного вывода
+    result: dict[str, dict[str, set | str]] = {}
 
     for import_name, files in imports.items():
         for pkg_name, version in installed.items():
@@ -52,22 +50,23 @@ def match_packages(
 
     return result
 
-def find_unmatched_imports(
+def get_unmatched_imports(
         imports: set[str],
         matched_packages: dict[str, str],
 ) -> set[str]:
-    m_imports = set()
+    matched_imports = set()
 
     for pkg in matched_packages:
-        m_imports.add(normalize(pkg))
+        matched_imports.add(normalize(pkg))
 
     return {
         imp for imp in imports
-        if normalize(imp) not in m_imports
+        if normalize(imp) not in matched_imports
     }
 
-def find_unused_packages(
+def get_unused_packages(
         installed: dict[str, str],
         matched_packages: dict[str, str]
 ) -> set[str]:
     return set(installed) - set(matched_packages)
+

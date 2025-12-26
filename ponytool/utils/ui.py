@@ -16,5 +16,5 @@ def warning(msg: str):
 def error(msg: str):
     console.print(f"[red]✖ {msg}[/red]")
 
-def help(msg: str):
+def hint(msg: str):
     console.print(f"[white]? {msg}[/white] ")
