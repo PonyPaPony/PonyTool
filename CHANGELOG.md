@@ -1,3 +1,8 @@
+## [2.0.1] — 2025-12-31
+### Fixed
+- `pony test --html` now correctly generates HTML coverage reports
+
+
 ## [2.0.0] — 2025-12-26
 
 ### Added

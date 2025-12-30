@@ -7,7 +7,7 @@ def run_test(coverage=False, html=False):
     info("Running tests")
     cmd = ['pytest']
 
-    if coverage:
+    if coverage or html:
         cmd.append("--cov")
 
     if html:
