@@ -1,10 +1,9 @@
+[![PyPI version](https://badge.fury.io/py/ponytool.svg)](https://pypi.org/project/ponytool/)
+
 # PonyTool
 
-PonyTool — это небольшой CLI-инструмент для Python-разработчиков,  
-которых **достала ежедневная рутина** при работе с проектами.
-
-Он не пытается быть фреймворком, магией или «умным помощником».  
-Он просто убирает повторяющиеся действия, которые раздражают и отнимают время каждый день.
+PonyTool — это CLI-инструмент для Python-разработчиков,
+который убирает рутину при работе с проектами.
 
 ---
 
@@ -46,6 +45,11 @@ PonyTool — для Python-разработчиков,
 Он делает только одно — **упрощает ежедневную рутину**.
 
 ---
+
+## Установка
+```bash
+pip install -U ponytool
+```
 
 ## Основные команды
 
@@ -103,7 +107,7 @@ pony test --coverage --html
 я создаю проект →
 пишу код →
 тестирую →
-создаю полиш-файлы (gitignore, README, license, зависимости)
+создаю служебные файлы (gitignore, README, license, зависимости)
 ```
 Без лишних шагов и постоянного гугления.
 
@@ -113,6 +117,37 @@ pony test --coverage --html
 
 - Он не пытается понравиться всем.
 - Он решает конкретные проблемы — и делает это честно.
+
+## Contents
+- Installation
+- Commands
+- Example
+- Project status
+- Releases
+- License
+
+## Example
+
+```bash
+$ pony init
+✔ Project structure created
+
+$ pony bootstrap
+✔ .gitignore created
+✔ README.md created
+✔ LICENSE created
+
+$ pony deps
+✔ requirements.txt generated
+
+$ pony test --coverage
+✔ Tests passed
+✔ Coverage report generated
+```
+
+## Releases
+This project is published on PyPI and versioned via GitHub Releases.
+See the Releases page for changelogs and version history.
 
 ## Лицензия
 
