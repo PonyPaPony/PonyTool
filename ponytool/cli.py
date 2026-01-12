@@ -18,6 +18,7 @@ def main():
     subparsers.add_parser("init")
     subparsers.add_parser("deps")
     subparsers.add_parser("bootstrap")
+
     test_parser = subparsers.add_parser("test")
     test_parser.add_argument('-c', '--coverage', action='store_true')
     test_parser.add_argument('--html', action='store_true')

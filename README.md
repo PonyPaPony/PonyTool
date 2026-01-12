@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/ponytool.svg)](https://pypi.org/project/ponytool/)
+
 # PonyTool
 
 PonyTool — это небольшой CLI-инструмент для Python-разработчиков,  
